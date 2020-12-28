@@ -1,1 +1,3 @@
-# pandora-python-sdk.v2
+# Python SDK for Pandora 2.0
+
+To be continued...
