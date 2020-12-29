@@ -178,13 +178,26 @@ class TestClientMethods(unittest.TestCase):
         """
         self.conn.get_query_mapping("repo=_frontend_error")
 
+    def test_search_manager_conn(self):
+        """
+        使用high level的搜索接口
+        :return:
+        """
+        sm = pdr_python_sdk.SearchManager(
+            scheme=self.conn.scheme,
+            host=self.conn.host,
+            port=self.conn.port,
+            token=self.conn.token
+        )
+        sm.query("repo=_frontend_error", start=0, end=int(time.time() * 1000), verbose=True)
+
     def test_search_manager(self):
         """
         使用high level的搜索接口
         :return:
         """
         sm = pdr_python_sdk.SearchManager(self.conn)
-        sm.query("repo=_frontend_error", start=0, end=int(time.time() * 1000))
+        sm.query("repo=_frontend_error", start=0, end=int(time.time() * 1000), verbose=True)
 
     def test_search_manager_pandas(self):
         """

@@ -31,10 +31,10 @@ class SplBaseCommand(OnDemandAction):
         self.lines = []
         self.spl_args = []
 
-    def on_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
+    def on_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
         self.process_protocol(argv, input_stream, output_stream)
 
-    def process_protocol(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
+    def process_protocol(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
         try:
             if argv is None:
                 argv = sys.argv
@@ -53,7 +53,7 @@ class SplBaseCommand(OnDemandAction):
             self.metainfo['error_traceback'] = "{}".format(traceback.format_exc())
             send_packet(output_stream, self.metainfo, [])
 
-    def process_data(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
+    def process_data(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
         """
         To be implemented
         """

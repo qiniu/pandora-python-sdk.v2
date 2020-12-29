@@ -24,7 +24,7 @@ class TestClientMethods(unittest.TestCase):
         Check the runner method
         """
         run(HelloWorldApi, ["/bin/test_api.py app_root/bin/libs", "app_root/bin/libs"], sys.stdin.buffer,
-            sys.stdout.buffer)
+            sys.__stdout__.buffer)
 
 
 if __name__ == "__main__":
