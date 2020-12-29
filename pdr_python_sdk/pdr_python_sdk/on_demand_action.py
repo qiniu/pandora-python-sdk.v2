@@ -23,14 +23,14 @@ class OnDemandAction(object):
     One time action which process starts on new request and ends after handling it.
     """
 
-    def on_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
+    def on_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
         """
         method used to handle request.
         """
         raise NotImplemented('method [on_request()] is not yet implemented')
 
 
-def run(clz, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
+def run(clz, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
 
     # config logging
     config_logging()

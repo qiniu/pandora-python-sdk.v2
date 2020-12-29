@@ -27,7 +27,7 @@ class OnDemandApi(OnDemandAction):
     def __init__(self):
         self.__is_inited = False
         self.__input_stream = sys.stdin.buffer
-        self.__output_stream = sys.stdout.buffer
+        self.__output_stream = sys.__stdout__.buffer
 
     def do_handle_init(self, packet):
         """
@@ -89,14 +89,14 @@ class OnDemandApi(OnDemandAction):
         """
         self.write(packet.to_string())
 
-    def on_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
+    def on_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
         """
         default method called when new request arrives.
         in default, this method uses sys.stdin as input stream and sys.stdout as ouput stream
         """
         self.handle_request(argv, input_stream, output_stream)
 
-    def handle_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
+    def handle_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
         """
         handle request from given input_stream, and response through given output_stream
         @param argv: cmd arguments

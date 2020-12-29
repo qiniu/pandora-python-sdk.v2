@@ -141,7 +141,7 @@ def format_field(part):
     return value
 
 
-def send_packet(output_stream=sys.stdout.buffer, meta_info=None, lines=None):
+def send_packet(output_stream=sys.__stdout__.buffer, meta_info=None, lines=None):
     """
     Send data in packets
     """

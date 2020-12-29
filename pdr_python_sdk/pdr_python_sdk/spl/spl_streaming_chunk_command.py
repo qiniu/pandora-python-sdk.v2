@@ -19,7 +19,7 @@ from .spl_base_command import SplBaseCommand
 
 class SplStreamingChunkCommand(SplBaseCommand):
 
-    def process_data(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
+    def process_data(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
         if argv is None:
             argv = sys.argv
         while True:

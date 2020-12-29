@@ -13,4 +13,4 @@ class Foobar(SplStreamingChunkCommand):
 
 
 if __name__ == '__main__':
-    run(Foobar, sys.argv, sys.stdin.buffer, sys.stdout.buffer)
+    run(Foobar, sys.argv, sys.stdin.buffer, sys.__stdout__.buffer)

@@ -16,5 +16,5 @@ class HelloWorldApi(OnDemandApi):
 
 
 if __name__ == '__main__':
-    run(HelloWorldApi, sys.argv, sys.stdin.buffer, sys.stdout.buffer)
+    run(HelloWorldApi, sys.argv, sys.stdin.buffer, sys.__stdout__.buffer)
 

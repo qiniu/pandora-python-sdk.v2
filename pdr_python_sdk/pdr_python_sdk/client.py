@@ -209,7 +209,6 @@ class PandoraConnection(object):
         This kind of jobs is more efficient and useful for scientific analysis.
         This job should use ``get_query_results`` API to fetch analysis result.
         """
-        kwargs["mode"] = "fast"
         kwargs["preview"] = False
         return self.create_query_job(spl, **kwargs)
 
