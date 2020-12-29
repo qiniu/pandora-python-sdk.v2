@@ -1,0 +1,15 @@
+sudo: false
+language: python
+python:
+  - "3.8"
+  - "3.9"
+git:
+  depth: 1
+  quiet: true
+install:
+  - pip install -r requirements.txt
+script:
+  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then bash ./pdr_python_sdk/travis/run_on_pull_requests.sh; fi'
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ./pdr_python_sdk/travis/run_on_non_pull_requests.sh; fi'
+after_success:
+  - codecov

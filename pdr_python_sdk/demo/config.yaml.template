@@ -1,0 +1,5 @@
+## Pandora Server Config 
+scheme : <http|https>
+host : <PandoraServiceHost>
+port : <PandoraServicePort>
+token : <AccessToken>
