@@ -12,12 +12,10 @@ params = {
     "token": "xxxxx"
 }
 """
-params = {
-    "scheme": "http",
-    "host": os.getenv("PANDORA_HOST"),
-    "port": int(os.getenv("PANDORA_PORT")),
-    "token": os.getenv("PANDORA_TOKEN")
-}
+import yaml
+f = open("config.yaml", 'r')
+params = yaml.load(f, Loader=yaml.FullLoader)
+f.close()
 conn = connect(**params)
 
 
@@ -50,6 +48,7 @@ def data_upload_demo():
         }
     ]
     # 上传前会做参数检验
+    print(json.dumps(data))
     conn.data_upload_strictly(data=data, repo="default", sourcetype="json")
     # 上传前不会做参数检验
     conn.data_upload(data=data, repo="default", sourcetype="json")

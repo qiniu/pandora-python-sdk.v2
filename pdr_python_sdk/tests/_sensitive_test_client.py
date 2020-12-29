@@ -11,15 +11,13 @@ class TestClientMethods(unittest.TestCase):
         Demo connection params
         """
         params = {
-            "scheme": "http",
+            "scheme": os.getenv("PANDORA_SCHEME", "http"),
             "host": os.getenv("PANDORA_HOST"),
-            "port": int(os.getenv("PANDORA_PORT")),
+            "port": os.getenv("PANDORA_PORT", None),
             "token": os.getenv("PANDORA_TOKEN")
         }
         if not params["host"]:
             raise RuntimeError("PANDORA_HOST must be set")
-        if not params["port"]:
-            raise RuntimeError("PANDORA_PORT must be set")
         if not params["token"]:
             raise RuntimeError("PANDORA_TOKEN must be set")
         self.conn = pdr_python_sdk.connect(**params)

@@ -81,10 +81,14 @@ class PandoraConnection(object):
         """
         self.scheme = kwargs.get("scheme", DEFAULT_SCHEME)
         self.host = kwargs.get("host", DEFAULT_HOST)
-        self.port = int(kwargs.get("port", DEFAULT_PORT))
+        self.port = kwargs.get("port", None)
         self.root_path = kwargs.get("root_path", API_ROOT_PREFIX)
-        self.root_url = urllib3.util.Url(
-            host=self.host, scheme=self.scheme, port=self.port, path=self.root_path)
+        if not self.port:
+            self.root_url = urllib3.util.Url(
+                host=self.host, scheme=self.scheme, path=self.root_path)
+        else:
+            self.root_url = urllib3.util.Url(
+                host=self.host, scheme=self.scheme, port=self.port, path=self.root_path)
 
         self.token = kwargs.get("token", "")
         self.session_key = kwargs.get("session_key", "")
