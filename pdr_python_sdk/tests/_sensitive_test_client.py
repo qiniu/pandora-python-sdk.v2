@@ -124,13 +124,10 @@ class TestClientMethods(unittest.TestCase):
         """
         仓库管理相关demo，不使用分层存储
         """
+        dm = pdr_python_sdk.DataManager(conn=self.conn)
         repo_name = "testrepo_by_sdk"
         # 创建仓库。不使用分层存储
-        try:
-            self.conn.create_repo(repo_name, lifeCycleEnable=False)
-        except pdr_python_sdk.BadRequest as err:
-            if "仓库 '{}' 已存在".format(repo_name) not in err.args[0]:
-                raise err
+        dm.create_repo_if_absent(repo_name, lifeCycleEnable=False)
 
         # 获得仓库列表
         self.conn.get_repos(prefix=repo_name, pageSize=5, pageNo=1)
@@ -147,7 +144,7 @@ class TestClientMethods(unittest.TestCase):
         # 更新仓库配置
         self.conn.update_repo_by_body(repo_name, config)
         # 删除仓库
-        self.conn.delete_repo_by_name(repo_name)
+        dm.delete_repo_if_exists(repo_name)
 
         # 创建仓库。使用分层存储，分层存储时间单位为毫秒
         # 7天热存储
@@ -155,21 +152,17 @@ class TestClientMethods(unittest.TestCase):
         # 365天冷存储
         # shardMaxDocs, shardMaxSize, indexMaxAge
         layer_reponame = "testlayer_by_sdk"
-        try:
-            self.conn.create_repo(layer_reponame, lifeCycleEnable=True, lifeCycle={
-                "hot": 7 * 24 * 60 * 60 * 1000,
-                "warm": 30 * 24 * 60 * 60 * 1000,
-                "cold": 365 * 24 * 60 * 60 * 1000
-            }, rollover={
-                "shardMaxDocs": "100k",
-                "shardMaxSize": "10gb",
-                "indexMaxAge": "1d"
-            })
-        except pdr_python_sdk.BadRequest as err:
-            if "仓库 '{}' 已存在".format(layer_reponame) not in err.args[0]:
-                raise err
+        dm.create_repo_if_absent(layer_reponame, lifeCycleEnable=True, lifeCycle={
+            "hot": 7 * 24 * 60 * 60 * 1000,
+            "warm": 30 * 24 * 60 * 60 * 1000,
+            "cold": 365 * 24 * 60 * 60 * 1000
+        }, rollover={
+            "shardMaxDocs": "100k",
+            "shardMaxSize": "10gb",
+            "indexMaxAge": "1d"
+        })
 
-        self.conn.delete_repo_by_name(layer_reponame)
+        dm.delete_repo_if_exists(layer_reponame)
 
     def test_query_mapping(self):
         """
@@ -213,6 +206,55 @@ class TestClientMethods(unittest.TestCase):
         )
         # two columns: origin, host
         self.assertEqual(len(df.columns), 2)
+
+    def test_data_manager_repos(self):
+        """
+        使用high level的仓库管理接口
+        :return:
+        """
+        dm = pdr_python_sdk.DataManager(self.conn)
+        dm.create_repo_if_absent("test_create_absent")
+        # will not fail
+        dm.create_repo_if_absent("test_create_absent")
+
+        dm.delete_repo_if_exists("test_create_absent")
+        # will not fail
+        dm.delete_repo_if_exists("test_create_absent")
+
+    def test_data_manager(self):
+        """
+        使用high level的数据接口
+        :return:
+        """
+        dm = pdr_python_sdk.DataManager(self.conn)
+        dm.save_records_raw_json([
+            {"a": 1, "b": 2, "c": "abdfda"},
+            {"a": 1, "b": 2, "d": 3},
+            {"a": 1, "b": 2, "c": "dfdsas"},
+            {"a": 1, "b": 2, "c": "fdasfdsa"}
+        ])
+        dm.save_records_raw_json([
+            {"t": int(time.time() * 1000) - 3, "a": 1, "b": 2, "c": "time_field"},
+            {"t": int(time.time() * 1000) - 2, "a": 1, "b": 2, "d": 3},
+            {"t": int(time.time() * 1000) - 1, "a": 1, "b": 2, "c": "time_field"},
+            {"t": int(time.time() * 1000), "a": 1, "b": 2, "c": "time_field"}
+        ], time_field="t")
+
+    def test_data_manager_write_pandas(self):
+        """
+        使用high level的数据接口，读取pandas dataframe，写回pandora
+        :return:
+        """
+        sm = pdr_python_sdk.SearchManager(self.conn)
+        df = sm.query_to_pandas(
+            "repo=_frontend_error",
+            start=0,
+            end=int(time.time() * 1000),
+            collectSize=10
+        )
+        # two columns: origin, host
+        dm = pdr_python_sdk.DataManager(self.conn)
+        dm.save_pandas_dataframe(df, origin="pandas", time_field="_time")
 
 
 if __name__ == "__main__":
