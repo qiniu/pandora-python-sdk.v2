@@ -14,7 +14,9 @@ limitations under the License.
 import time
 import logging
 import pandas
+import json
 from pdr_python_sdk import client
+from pdr_python_sdk import errors
 
 
 class SearchManager(object):
@@ -73,3 +75,67 @@ class SearchManager(object):
         results = self.query(spl, **kwargs)
         columns = list(map(lambda x: x['name'], results['fields']))
         return pandas.DataFrame.from_records(results['rows'], columns=columns)
+
+
+class DataManager(object):
+    """
+    Encapsulate Pandora Client Data SDK
+    """
+
+    def __init__(self, conn=None, **kwargs):
+        if not conn:
+            self.conn = client.connect(**kwargs)
+        else:
+            self.conn = conn
+
+    def create_repo_if_absent(self, repo_name, **kwargs):
+        try:
+            self.conn.create_repo(repo_name, **kwargs)
+        except errors.BadRequest as err:
+            if "仓库 '{}' 已存在".format(repo_name) not in err.args[0]:
+                raise err
+
+    def delete_repo_if_exists(self, repo_name):
+        try:
+            self.conn.delete_repo_by_name(repo_name)
+        except errors.NotFound:
+            pass
+
+    def save_records_raw_json(self, records=None, **kwargs):
+        """
+        Save records to pandora via raw json format
+
+        :param records: list of records
+        :type records: ``list``
+        :param repo: repo name
+        :type repo: ``str``
+        :param sourcetype: source type name
+        :type sourcetype: ``str``
+        :param time_field: which field to record the event time, the field should be 13-digit timestamp
+        :type time_field: ``str``
+        """
+        if records is None:
+            return
+        repo = kwargs.setdefault("repo", "default")
+        kwargs.setdefault("sourcetype", "json")
+        time_field = kwargs.get("time_field", None)
+        data = []
+        for r in records:
+            d = {"raw": json.dumps(r)}
+            if time_field and (time_field in r):
+                t = r[time_field]
+                if is_legal_timestamp(t):
+                    d["timestamp"] = t
+            data.append(d)
+        self.create_repo_if_absent(repo)
+        self.conn.data_upload(data, **kwargs)
+
+    def save_pandas_dataframe(self, df=None, **kwargs):
+        if df is None:
+            return
+        records = df.to_dict('records')
+        self.save_records_raw_json(records, **kwargs)
+
+
+def is_legal_timestamp(t):
+    return isinstance(t, int) and 1e12 <= t < 1e13
