@@ -50,6 +50,10 @@ PATH_SPL_QUERY_MAPPING = "/mapping"
 PATH_REPOS = "/repos"
 PATH_SINGLE_REPO = "/repos/{}"
 
+# sourcetype
+PATH_SOURCETYPE = "/sourcetype"
+PATH_SINGLE_SOURCETYPE = "/sourcetype/{}"
+
 
 def connect(**kwargs):
     return PandoraConnection(**kwargs)
@@ -351,6 +355,87 @@ class PandoraConnection(object):
 
     def update_repo_by_body(self, repo_name, req_body):
         return self.put(PATH_SINGLE_REPO.format(repo_name), req_body)
+
+    def get_sourcetypes(self, **page_params):
+        """
+        Get sourcetype list
+
+        :param sort: The sort column, updateTime by default
+        :type sort: ``string``
+        :param order: The order of data, asc or desc, desc by default
+        :type order: ``string``
+        :param pageNo: The page no, start from 1
+        :type pageNo: ``integer``
+        :param pageSize: The size of page, 10 by default
+        :type pageSize: ``integer``
+        :param prefix: The search keyword of repo name
+        :type prefix: ``string``
+        """
+        return self.get(PATH_SOURCETYPE, page_params)
+
+    def get_sourcetype_by_name(self, sourcetype_name):
+        return self.get(PATH_SINGLE_SOURCETYPE.format(sourcetype_name))
+
+    def create_sourcetype_by_body(self, sourcetype_name, req_body):
+        return self.post(PATH_SINGLE_SOURCETYPE.format(sourcetype_name), req_body)
+
+    def create_sourcetype(self, sourcetype_name, category="custom", description="", line_type="auto",
+                          datetime_type="now", charset="utf-8", **kwargs):
+        """
+        :param sourcetype_name: The name of sourcetype
+        :type sourcetype_name: ``string``
+        :param category: the type of sourcetype, must in ["custom", "web", "application", "metrics", "os", "database" "others", "email", "login", "structured"]
+        :type category: ``string``
+        :param description: The description of sourcetype
+        :type description : ``string``
+        :param line_type: The line type of data must in ["auto"，"single"，"regex"]
+        :type line_type : ``string``
+        :param datetime_type: The datetime type of data must in ["auto"，"now"，"custom"]
+        :type datetime_type : ``string``
+        :param charset: The charset of data
+        :type charset : ``string``
+        """
+        line_breaker = kwargs.get("line_breaker", "\r?\n")
+        regex = kwargs.get("regex", "")
+        datetime_format = kwargs.get("datetime_format", "")
+        zone_id = kwargs.get("zone_id", "Asia/Shanghai")
+        datetime_prefix = kwargs.get("datetime_prefix", "")
+        max_datetime_length = kwargs.get("max_datetime_length", 100)
+        field_discovery = kwargs.get("field_discovery", False)
+        app = kwargs.get("app", "search")
+        scope = kwargs.get("scope", "global")
+
+        req_body = {
+            "line": {
+                "type": line_type,
+                "lineBreaker": line_breaker,
+                "regex": regex
+            },
+            "datetime": {
+                "type": datetime_type,
+                "dateTimeFormat": datetime_format,
+                "zoneId": zone_id,
+                "dateTimePrefix": datetime_prefix,
+                "maxDateTimeLength": max_datetime_length
+            },
+            "description": description,
+            "category": category,
+            "advance": {
+                "charset": charset,
+                "fieldDiscovery": field_discovery
+            },
+            "app": app,
+            "scope": scope
+        }
+        return self.create_sourcetype_by_body(sourcetype_name, req_body)
+
+    def delete_sourcetype_by_name(self, sourcetype_name):
+        return self.delete(PATH_SINGLE_SOURCETYPE.format(sourcetype_name))
+
+    def is_exist_sourcetype(self, sourcetype_name):
+        if self.get_sourcetype_by_name(sourcetype_name) == {}:
+            return False
+        return True
 
 
 def encode_json(data):

@@ -9,7 +9,6 @@ mccabe
 numpy
 packaging
 pandas
-pdr-python-sdk
 pluggy
 py
 pycodestyle
