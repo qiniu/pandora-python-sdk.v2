@@ -256,6 +256,16 @@ class TestClientMethods(unittest.TestCase):
         dm = pdr_python_sdk.DataManager(self.conn)
         dm.save_pandas_dataframe(df, origin="pandas", time_field="_time")
 
+    def test_sourcetype(self):
+        if self.conn.is_exist_sourcetype("test_st"):
+            self.conn.delete_sourcetype_by_name("test_st")
+            assert not self.conn.is_exist_sourcetype("test_st")
+        self.conn.create_sourcetype("test_st", field_discovery=True)
+        assert self.conn.is_exist_sourcetype("test_st")
+        assert self.conn.get_sourcetype_by_name("test_st")["name"] == "test_st"
+        self.conn.delete_sourcetype_by_name("test_st")
+        assert not self.conn.is_exist_sourcetype("test_st")
+
 
 if __name__ == "__main__":
     unittest.main()
