@@ -125,8 +125,8 @@ class OnDemandApi(OnDemandAction):
                 response = self.handle_data(packet.body())
                 self.write_packet(ApiResponsePacket(1, response))
                 pass
-            except:
-                self.write('error when handling data')
+            except Exception as e:
+                self.write('error when handling data : {}'.format(e))
                 raise
 
         if packet.is_end():
