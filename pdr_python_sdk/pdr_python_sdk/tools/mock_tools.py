@@ -14,9 +14,11 @@ def gen_api_request_packet(opcode, body=""):
 
 
 def mock_api_request(custom_api_cls,
-                     method="GET", header={}, param={}, body="", uuid="", path=""):
+                     method="GET", header={}, param={}, body="", uuid="", path="", metadata=None):
     """
     Mock api request to test custom api
+
+    metadata = {"server_uri": "http://localhost:xxxx/", "session_key":"xxxxx"}
     """
     request = {
         "method": method,
@@ -33,7 +35,12 @@ def mock_api_request(custom_api_cls,
     opcode = ApiRequestPacket.OPCODE_REQUEST_INIT | \
              ApiRequestPacket.OPCODE_REQUEST_DATA | \
              ApiRequestPacket.OPCODE_REQUEST_END
-    body = json.dumps({"request": request})
+
+    full_request = {"request": request}
+    if metadata:
+        full_request["metadata"] = metadata
+
+    body = json.dumps(full_request)
     request_packet = gen_api_request_packet(opcode, body)
 
     in_stream = io.BytesIO(request_packet.encode("utf-8"))
