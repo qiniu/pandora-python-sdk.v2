@@ -12,7 +12,6 @@ limitations under the License.
 """
 
 import json
-import logging
 
 
 class ApiRequestPacket(object):
@@ -91,14 +90,9 @@ class ApiRequestPacket(object):
         read request packet from input stream
         @param input_stream: input stream that request data will be read from
         """
-        while True:
-            opcode_str = input_stream.readline().decode('utf-8')
-            if opcode_str == b'':
-                return False
-            if opcode_str != b'\n':
-                # ignore extra newlines before opcode
-                break
-            break
+        opcode_str = input_stream.readline().decode('utf-8')
+        if len(opcode_str) <= 0:
+            return False
         self.__opcode = int(opcode_str)
         len_str = input_stream.readline().decode("utf-8")
         self.__body_length = int(len_str)
@@ -135,11 +129,12 @@ class ApiResponsePacket(object):
 
 
 def _parse_body(body):
-    return ApiPacketBody(**json.loads(body))
+    params = json.loads(body)
+    return ApiPacketBody(**params)
 
 
 class ApiPacketBody(object):
-    def __init__(self, metadata, request):
+    def __init__(self, metadata=None, request=None):
         if metadata is None:
             self.__metadata = None
         else:

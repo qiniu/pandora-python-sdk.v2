@@ -13,6 +13,9 @@ limitations under the License.
 
 import json
 
+HTTP_CODE_KEY = "http_code"
+ACTUAL_RESPONSE_KEY = "actual_response"
+
 
 class Response(object):
     """
@@ -24,5 +27,8 @@ class Response(object):
         self.actual_response = actual_response
 
     def to_string(self):
-        return '{"http_code":' + str(self.http_code) + ',"actual_response":' + json.dumps(
-            self.actual_response) + '}'
+        response = {
+            HTTP_CODE_KEY: self.http_code,
+            ACTUAL_RESPONSE_KEY: self.actual_response,
+        }
+        return json.dumps(response)

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pdr-python-sdk",
-    version="1.0.9",
+    version="1.0.10",
     keywords=["pip", "qiniu", "pandora", "sdk"],
     description="pandora python sdk, include customapi, customoperation, kvstore",
     license="MIT Licence",
