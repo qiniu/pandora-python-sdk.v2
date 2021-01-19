@@ -1,0 +1,3 @@
+pdr-python-sdk
+pytest
+urllib3

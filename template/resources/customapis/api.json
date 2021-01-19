@@ -1,0 +1,9 @@
+{
+  "prefix": "/test",
+  "env": "python3",
+  "filename": "api_example.py",
+  "method": [
+    "GET",
+    "PUT"
+  ]
+}

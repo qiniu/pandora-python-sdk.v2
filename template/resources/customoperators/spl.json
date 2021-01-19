@@ -1,0 +1,6 @@
+{
+  "name": "sample",
+  "type": "centralized",
+  "env": "python3",
+  "filename": "spl_example.py"
+}
