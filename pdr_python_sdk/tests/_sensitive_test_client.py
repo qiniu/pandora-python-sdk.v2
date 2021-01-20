@@ -1,7 +1,10 @@
 import os
 import time
 import unittest
+import pytest
 import pdr_python_sdk
+from pdr_python_sdk.errors import NotFound
+from pdr_python_sdk.tools import upload
 
 
 class TestClientMethods(unittest.TestCase):
@@ -265,6 +268,21 @@ class TestClientMethods(unittest.TestCase):
         assert self.conn.get_sourcetype_by_name("test_st")["name"] == "test_st"
         self.conn.delete_sourcetype_by_name("test_st")
         assert not self.conn.is_exist_sourcetype("test_st")
+
+    def test_app_install(self):
+        app_name = "test-pure-app"
+        parentdir = os.path.dirname(os.path.abspath(__file__))
+        app_path = os.sep.join([parentdir, "data", "pure-app.tar.gz"])
+        ret = self.conn.app_install(app_path, overwrite=True)
+        self.assertEqual(ret, True)
+        resp = self.conn.app_enable(app_name)
+        self.assertEqual(resp.status, 200)
+        resp = self.conn.app_disable(app_name)
+        self.assertEqual(resp.status, 200)
+        resp = self.conn.app_uninstall(app_name)
+        self.assertEqual(resp.status, 200)
+        with pytest.raises(NotFound):
+            self.conn.app_enable(app_name)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+import copy
 import urllib3
 import json
 import time
@@ -53,6 +55,13 @@ PATH_SINGLE_REPO = "/repos/{}"
 # sourcetype
 PATH_SOURCETYPE = "/sourcetype"
 PATH_SINGLE_SOURCETYPE = "/sourcetype/{}"
+
+# APP Upload
+APP_IMPORT = "/apps/import"
+APP_UNINSTALL = "/apps/{}/uninstall"
+APP_ENABLE = "/apps/{}/enable"
+APP_DISABLE = "/apps/{}/disable"
+APP_CHUNK_SIZE = 5242880
 
 
 def connect(**kwargs):
@@ -435,6 +444,60 @@ class PandoraConnection(object):
     def is_exist_sourcetype(self, sourcetype_name):
         if self.get_sourcetype_by_name(sourcetype_name) == {}:
             return False
+        return True
+
+    def app_enable(self, app_name):
+        """
+        Enable App
+        """
+        return self.request(method="PUT", subpath=APP_ENABLE.format(app_name))
+
+    def app_disable(self, app_name):
+        """
+        Disable App
+        """
+        return self.request(method="PUT", subpath=APP_DISABLE.format(app_name))
+
+    def app_uninstall(self, app_name):
+        """
+        Uninstall App
+        """
+        return self.request(method="PUT", subpath=APP_UNINSTALL.format(app_name))
+
+    def app_install(self, filename, overwrite=False):
+        """
+        Import app to Pandora
+        """
+        if not os.path.exists(filename):
+            raise IllegalArgument(f"File not found: {filename}")
+        filesize = os.path.getsize(filename)
+        absname = os.path.abspath(filename)
+        basename = os.path.basename(absname)
+        per_chunk_size = APP_CHUNK_SIZE
+        chunks, residual = filesize // per_chunk_size, filesize % per_chunk_size
+        if residual > 0:
+            chunks += 1
+        with open(absname, 'rb') as f:
+            for i in range(chunks):
+                curr_chunk_size = per_chunk_size
+                if i == chunks - 1:
+                    curr_chunk_size = residual
+                params = {
+                    "resumableChunkNumber": i + 1,
+                    "resumableChunkSize": per_chunk_size,
+                    "resumableCurrentChunkSize": curr_chunk_size,
+                    "resumableTotalSize": filesize,
+                    "resumableType": "application/x-gzip",
+                    "resumableIdentifier": f"{filesize}-{basename}",
+                    "resumableFilename": basename,
+                    "resumableRelativePath": basename,
+                    "resumableTotalChunks": chunks,
+                    "upgrade": str(overwrite).lower(),
+                }
+                fields = copy.copy(params)
+                content = f.read(curr_chunk_size)
+                fields["file"] = (basename, content, 'application/octet-stream')
+                self.request(method="POST", subpath=APP_IMPORT + "?" + urlencode(params), fields=fields)
         return True
 
 
