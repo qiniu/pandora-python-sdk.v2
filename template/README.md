@@ -185,3 +185,15 @@ Usage:
 #### 上传
 
 可以进入 Pandora 的服务环境的应用管理，进行上传了。
+
+或者可以执行sdk中提供的 upload_app 工具进行上传。
+
+```shell
+upload_app your-app.tar.gz --host "${PANDORA_HOST}" --scheme "${PANDORA_SCHEME}" --port "${PANDORA_PORT}" --token "${PANDORA_TOKEN}"
+```
+
+或者可以使用run.sh 中的upload 命令，上传 dist/ 目录下生成的APP文件包。
+
+```shell
+./run.sh upload
+```

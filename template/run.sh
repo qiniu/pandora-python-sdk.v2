@@ -2,7 +2,6 @@
 
 #set -x
 
-
 if [ -z ${PROJECT_DIR+x} ]; then
   echo "PROJECT_DIR is unset, use $(pwd)"
   PROJECT_DIR=$(pwd)
@@ -42,7 +41,7 @@ update_deps() {
 }
 
 package_deps() {
-  grep -v -f env.ignore "${PROJECT_DIR}"/requirements.txt > "${PROJECT_DIR}"/.tmp_requirements
+  grep -v -f env.ignore "${PROJECT_DIR}"/requirements.txt >"${PROJECT_DIR}"/.tmp_requirements
   cat "${PROJECT_DIR}"/.tmp_requirements
   pip install -t "${PROJECT_DIR}"/bins/libs -r "${PROJECT_DIR}"/.tmp_requirements --no-deps --force-reinstall
   rm "${PROJECT_DIR}"/.tmp_requirements
@@ -62,7 +61,7 @@ package() {
 
 docker_build() {
   clean
-  docker build  --rm -t app .
+  docker build --rm -t app .
   docker run -v $(PWD):/usr/src/app -it app
 }
 
@@ -70,6 +69,29 @@ clean() {
   rm -r "${PROJECT_DIR}"/.pytest_cache
   rm -r "${PROJECT_DIR}"/bins/libs/*
   rm -r "${PROJECT_DIR}"/dist
+}
+
+upload() {
+  # shellcheck disable=SC2045
+  if [ -z ${PANDORA_HOST+x} ]; then
+    echo "PANDORA_HOST is unset!"
+    exit 1
+  fi
+  if [ -z ${PANDORA_TOKEN+x} ]; then
+    echo "PANDORA_TOKEN is unset!"
+    exit 1
+  fi
+  if [ -z ${PANDORA_PORT+x} ]; then
+    echo "PANDORA_PORT is unset!"
+    exit 1
+  fi
+  if [ -z ${PANDORA_SCHEME+x} ]; then
+    echo "PANDORA_SCHEME is unset!"
+    exit 1
+  fi
+  for file in dist/*.tar.gz; do
+    upload_app "$file" --host "${PANDORA_HOST}" --scheme "${PANDORA_SCHEME}" --port "${PANDORA_PORT}" --token "${PANDORA_TOKEN}"
+  done
 }
 
 #[all|help|init_local|update_deps|package_deps|unittest|package|clean|docker_build]
@@ -110,6 +132,9 @@ else
   docker_build)
     docker_build
     ;;
+  upload)
+    upload
+    ;;
   clean)
     clean
     ;;
@@ -119,5 +144,3 @@ else
     ;;
   esac
 fi
-
-
