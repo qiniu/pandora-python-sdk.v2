@@ -6,6 +6,7 @@ dist
 .pytest_cache
 
 # local env
+.DS_Store
 .idea
 venv
 __pycache__
