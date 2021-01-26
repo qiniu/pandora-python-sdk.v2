@@ -51,11 +51,18 @@ unittest() {
   pytest "${PROJECT_DIR}"/bins/tests/*
 }
 
+build_webapp() {
+  if [ -d webapp ]; then
+    cd "${PROJECT_DIR}"/webapp && npm run build_appserver && cd "${PROJECT_DIR}" || exit
+  fi
+}
+
 package() {
+  build_webapp
   export COPY_EXTENDED_ATTRIBUTES_DISABLE=true
   export COPYFILE_DISABLE=true
   cd "${PROJECT_PARENT_DIR}" || exit
-  tar czf "${PROJECT_NAME}".tar.gz --exclude="venv" --exclude=".git" --exclude=".DS_Store" "${PROJECT_NAME}" || exit
+  tar czf "${PROJECT_NAME}".tar.gz --exclude="venv" --exclude="webapp" --exclude=".git" --exclude=".DS_Store" "${PROJECT_NAME}" || exit
   mkdir "${PROJECT_DIR}"/dist && mv "${PROJECT_NAME}".tar.gz "${PROJECT_DIR}"/dist
 }
 

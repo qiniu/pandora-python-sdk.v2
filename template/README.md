@@ -174,6 +174,7 @@ Usage:
 ```
 
 如果在windows/mac 环境下开发，需要向linux环境打包APP，可以使用 docker_build 环境，注意，如果项目依赖C扩展，需要在 Dockerfile 中指定目标的 Python 环境。
+如果需要node环境的话，建议使用 [python-nodejs](https://hub.docker.com/r/nikolaik/python-nodejs) 镜像。
 
 ```
 ./run.sh docker_build

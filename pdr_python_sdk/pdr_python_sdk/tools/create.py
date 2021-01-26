@@ -33,11 +33,30 @@ def create_pandora_app(mockargs=""):
     shutil.rmtree(TEMP_SDK_DIR)
 
     config_file = os.sep.join([app_dir, "app.json"])
+
+    # replace app name & title in app.json
     with open(config_file, 'r') as f:
-        app_config = json.loads(f.read())
-        app_config["name"] = appname
-        app_config["title"] = args.title
-        print(app_config)
+        config = json.loads(f.read())
+        config["name"] = appname
+        config["title"] = args.title
 
     with open(config_file, 'w') as f:
-        f.write(json.dumps(app_config, ensure_ascii=False))
+        f.write(json.dumps(config, ensure_ascii=False))
+
+    # replace app name in package.json
+    package_file = os.sep.join([app_dir, "package.json"])
+    if not os.path.exists(package_file):
+        config = {
+            "name": appname,
+            "version": "0.1.0",
+            "scripts": {
+                "package": "bash ./run.sh package"
+            }
+        }
+    else:
+        with open(package_file, 'r') as f:
+            config = json.loads(f.read())
+            config["name"] = appname
+
+    with open(package_file, 'w') as f:
+        f.write(json.dumps(config, ensure_ascii=False))
