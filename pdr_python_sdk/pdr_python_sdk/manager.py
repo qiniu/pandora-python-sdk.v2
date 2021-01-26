@@ -14,6 +14,7 @@ limitations under the License.
 import time
 import logging
 import pandas
+import numpy as np
 import json
 from pdr_python_sdk import client
 from pdr_python_sdk import errors
@@ -101,7 +102,7 @@ class DataManager(object):
         except errors.NotFound:
             pass
 
-    def save_records_raw_json(self, records=None, **kwargs):
+    def save_records_raw_json(self, records=None, try_create_repo=True, **kwargs):
         """
         Save records to pandora via raw json format
 
@@ -127,14 +128,43 @@ class DataManager(object):
                 if is_legal_timestamp(t):
                     d["timestamp"] = t
             data.append(d)
-        self.create_repo_if_absent(repo)
-        self.conn.data_upload(data, **kwargs)
+        if try_create_repo:
+            self.create_repo_if_absent(repo, **kwargs)
+        return self.conn.data_upload(data, **kwargs)
 
     def save_pandas_dataframe(self, df=None, **kwargs):
+        """
+        Save pandas dataframe to pandora
+        """
         if df is None:
             return
         records = df.to_dict('records')
-        self.save_records_raw_json(records, **kwargs)
+        return self.save_records_raw_json(records, **kwargs)
+
+    def save_pandas_dataframe_splits(self, df=None, n=1, **kwargs):
+        """
+        Save pandas dataframe to pandora in n parts
+        """
+        if df is None:
+            return
+        if n <= 1:
+            return self.save_pandas_dataframe(df, **kwargs)
+
+        dfs = np.array_split(df, n)
+        final_ret = {}
+        for d in dfs:
+            resp = self.save_pandas_dataframe(d, **kwargs)
+            final_ret = merge_result(final_ret, resp)
+        return final_ret
+
+
+def merge_result(left, right):
+    return {
+        "total": left.get("total", 0) + right.get("total", 0),
+        "success": left.get("success", 0) + right.get("success", 0),
+        "failure": left.get("failure", 0) + right.get("failure", 0),
+        "details": left.get("details", []) + right.get("details", []),
+    }
 
 
 def is_legal_timestamp(t):

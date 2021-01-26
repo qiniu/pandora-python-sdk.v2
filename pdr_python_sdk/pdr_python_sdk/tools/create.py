@@ -40,4 +40,4 @@ def create_pandora_app(mockargs=""):
         print(app_config)
 
     with open(config_file, 'w') as f:
-        f.write(json.dumps(app_config))
+        f.write(json.dumps(app_config, ensure_ascii=False))

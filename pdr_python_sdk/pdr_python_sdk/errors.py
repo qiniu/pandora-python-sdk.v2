@@ -24,5 +24,9 @@ class NotFound(RuntimeError):
     pass
 
 
+class RequestTooLarge(RuntimeError):
+    pass
+
+
 class IllegalArgument(RuntimeError):
     pass
