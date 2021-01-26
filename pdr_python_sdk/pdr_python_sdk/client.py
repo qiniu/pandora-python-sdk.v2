@@ -129,6 +129,10 @@ class PandoraConnection(object):
             raise NotFound("""Not Found Error Status: {}, Error Reason: {}, Body: {}""".format(
                 resp.status, resp.reason, resp.data.decode(DEFAULT_ENCODING)))
 
+        if resp.status == 413:
+            raise RequestTooLarge("""Request Too Large Status: {}, Error Reason: {}, BodySize: {}""".format(
+                resp.status, resp.reason, len(urlopen_kw.get("body", b""))))
+
         if resp.status >= 400:
             raise BadRequest("""Bad Request Error Status: {}, Error Reason: {}, Body: {}""".format(
                 resp.status, resp.reason, resp.data.decode(DEFAULT_ENCODING)))

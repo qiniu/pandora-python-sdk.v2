@@ -257,7 +257,10 @@ class TestClientMethods(unittest.TestCase):
         )
         # two columns: origin, host
         dm = pdr_python_sdk.DataManager(self.conn)
-        dm.save_pandas_dataframe(df, origin="pandas", time_field="_time")
+        resp = dm.save_pandas_dataframe_splits(df, n=2, origin="pandas", time_field="_time")
+        self.assertEqual(resp['success'], 10)
+        resp = dm.save_pandas_dataframe_splits(df, origin="pandas", time_field="_time")
+        self.assertEqual(resp['success'], 10)
 
     def test_sourcetype(self):
         if self.conn.is_exist_sourcetype("test_st"):
