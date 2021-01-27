@@ -53,7 +53,7 @@ unittest() {
 
 build_webapp() {
   if [ -d webapp ]; then
-    cd "${PROJECT_DIR}"/webapp && npm run build_appserver && cd "${PROJECT_DIR}" || exit
+    cd "${PROJECT_DIR}"/webapp && npm install && npm run build_appserver && cd "${PROJECT_DIR}" || exit
   fi
 }
 
