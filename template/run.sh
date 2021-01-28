@@ -9,6 +9,13 @@ else
   echo "PROJECT_DIR is set to ${PROJECT_DIR}}"
 fi
 
+if [ -z ${NODE_COMMAND+x} ]; then
+  echo "NODE_COMMAND is unset, use yarn"
+  NODE_COMMAND="yarn"
+else
+  echo "NODE_COMMAND is set to ${NODE_COMMAND}"
+fi
+
 PROJECT_NAME=$(basename "${PROJECT_DIR}")
 PROJECT_PARENT_DIR=$(dirname "${PROJECT_DIR}")
 
@@ -53,7 +60,7 @@ unittest() {
 
 build_webapp() {
   if [ -d webapp ]; then
-    cd "${PROJECT_DIR}"/webapp && npm run build_appserver && cd "${PROJECT_DIR}" || exit
+    cd "${PROJECT_DIR}"/webapp && ${NODE_COMMAND} install && ${NODE_COMMAND} run build_appserver && cd "${PROJECT_DIR}" || exit
   fi
 }
 
