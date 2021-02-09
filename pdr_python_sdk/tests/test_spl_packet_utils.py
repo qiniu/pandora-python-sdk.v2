@@ -3,6 +3,7 @@ import io
 from pdr_python_sdk.spl import *
 
 
+
 class TestClientMethods(unittest.TestCase):
 
     def test_parse_head(self):
@@ -89,3 +90,22 @@ class TestClientMethods(unittest.TestCase):
 
     def test_decode_string(self):
         self.assertEqual(decode_string("\\t\\n"), "\t\n")
+
+    def test_parse_body_bench(self):
+        lines = ["cnt\t_raw\t_time\thost\torigin\tsourcetype"]
+        for i in range(1000):
+            lines.append("\t".join(
+                [
+                    f"{TYPE_INT},{i}",
+                    f"{TYPE_STRING},this is a log, it is a little long, but it's just a string, with no surprise",
+                    f"{TYPE_INT},{1612774891 + i}",
+                    f"{TYPE_STRING},192.168.1.1",
+                    f"{TYPE_STRING},/path/to/your/log.txt",
+                    f"{TYPE_STRING},test_log",
+                ]
+            ))
+        large_body = "\n".join(lines)
+        body_bytes = large_body.encode("utf-8")
+        print(f"size is ============ {len(body_bytes)}")
+        for i in range(5000):
+            lines = parse_body(io.BytesIO(body_bytes), len(body_bytes))

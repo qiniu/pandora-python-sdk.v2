@@ -29,6 +29,7 @@ setup(
         "urllib3",
         "pyyaml",
         "GitPython",
-        "pandas"
+        "pandas",
+        "pyarrow"
     ]
 )
