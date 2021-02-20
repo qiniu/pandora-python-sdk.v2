@@ -85,7 +85,7 @@ class ApiRequestPacket(object):
         """
         return self.__body
 
-    def read(self, input_stream):
+    def read(self, input_stream, parse_body):
         """
         read request packet from input stream
         @param input_stream: input stream that request data will be read from
@@ -97,7 +97,7 @@ class ApiRequestPacket(object):
         len_str = input_stream.readline().decode("utf-8")
         self.__body_length = int(len_str)
         request_string = input_stream.read(self.__body_length).decode("utf-8")
-        self.__body = _parse_body(request_string)
+        self.__body = parse_body(request_string)
 
         return True
 
@@ -115,7 +115,7 @@ class ApiResponsePacket(object):
         return self.__opcode
 
     def body_length(self):
-        return len(self.__body)
+        return len(bytearray(self.__body, "utf-8"))
 
     def body(self):
         return self.__body
@@ -128,7 +128,7 @@ class ApiResponsePacket(object):
         return str(self.opcode()) + '\n' + str(self.body_length()) + '\n' + self.body()
 
 
-def _parse_body(body):
+def parse_api_body(body):
     params = json.loads(body)
     return ApiPacketBody(**params)
 

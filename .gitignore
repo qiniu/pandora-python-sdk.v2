@@ -4,6 +4,8 @@ dist
 *.egg-info
 .coverage
 .pytest_cache
+*.pyc
+pdr_python_sdk/test_pdr_app/*
 
 # local env
 .DS_Store
