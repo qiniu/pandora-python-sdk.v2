@@ -48,7 +48,11 @@ update_deps() {
 }
 
 package_deps() {
-  grep -v -f env.ignore "${PROJECT_DIR}"/requirements.txt >"${PROJECT_DIR}"/.tmp_requirements
+  if [ -s env.ignore ]; then
+      grep -v -f env.ignore "${PROJECT_DIR}"/requirements.txt >"${PROJECT_DIR}"/.tmp_requirements
+  else
+      cat "${PROJECT_DIR}"/requirements.txt >"${PROJECT_DIR}"/.tmp_requirements
+  fi
   cat "${PROJECT_DIR}"/.tmp_requirements
   pip install -t "${PROJECT_DIR}"/bins/libs -r "${PROJECT_DIR}"/.tmp_requirements --no-deps --force-reinstall
   rm "${PROJECT_DIR}"/.tmp_requirements
