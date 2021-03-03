@@ -13,45 +13,17 @@ limitations under the License.
 
 import sys
 
-from .packet import ApiPacketBody
-from .packet import ApiRequestPacket
-from .packet import ApiResponsePacket
-from .packet import parse_api_body
 from ..on_demand_action import OnDemandAction
+from ..api.packet import ApiRequestPacket
+from ..api.packet import ApiResponsePacket
+from .trigger_action_param import parse_packet_body
 
 
-class OnDemandApi(OnDemandAction):
-    """
-    One time api which process starts on new request and ends after handling it.
-    """
-
+class OnDemandTriggerAction(OnDemandAction):
     def __init__(self):
         self.__is_inited = False
         self.__input_stream = sys.stdin.buffer
-        self.__output_stream = sys.__stdout__.buffer
-
-    def do_handle_init(self, packet):
-        """
-        actual initialization actions
-        @param ApiRequestPacket packet: packet received from the request
-        """
-        pass
-
-    def do_handle_data(self, data):
-        """
-        actual data processing actions
-        @param ApiPacketBody data: data block in request
-        @rtype: str
-        @return: response as a string
-        """
-        raise NotImplemented('method [do_handle_data(data)] is not yet implemented')
-
-    def do_handle_end(self):
-        """
-        perform terminating processes
-        @return:
-        """
-        pass
+        self.__output_stream = sys.stdout.buffer
 
     def handle_init(self, packet):
         """
@@ -61,6 +33,20 @@ class OnDemandApi(OnDemandAction):
         self.do_handle_init(packet)
         self.__is_inited = True
 
+    def do_handle_init(self, packet):
+        """
+        actual initialization actions
+        @param ApiRequestPacket packet: packet received from the request
+        """
+        pass
+
+    def on_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
+        """
+        default method called when new request arrives.
+        in default, this method uses sys.stdin as input stream and sys.stdout as ouput stream
+        """
+        self.handle_alert_action(argv, input_stream, output_stream)
+
     def handle_data(self, data):
         """
         actions to handle packet body and generate response
@@ -68,13 +54,29 @@ class OnDemandApi(OnDemandAction):
         @rtype: str
         @return: response as a string
         """
-        return self.do_handle_data(data)
+        return self.do_handle_events(data)
+
+    def do_handle_events(self, events):
+        """
+        actual data processing actions
+        @param TriggerActionParam[] events: data block in request
+        @rtype: str
+        @return: response as a string
+        """
+        raise NotImplemented('method [do_handle_data(data)] is not yet implemented')
 
     def handle_end(self):
         """
         perform actions needed after request is handled, for example, release resources, clear thread, etc.
         """
         self.do_handle_end()
+
+    def do_handle_end(self):
+        """
+        perform terminating processes
+        @return:
+        """
+        pass
 
     def write(self, data):
         """
@@ -90,14 +92,7 @@ class OnDemandApi(OnDemandAction):
         """
         self.write(packet.to_string())
 
-    def on_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
-        """
-        default method called when new request arrives.
-        in default, this method uses sys.stdin as input stream and sys.stdout as ouput stream
-        """
-        self.handle_request(argv, input_stream, output_stream)
-
-    def handle_request(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
+    def handle_alert_action(self, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.stdout.buffer):
         """
         handle request from given input_stream, and response through given output_stream
         @param argv: cmd arguments
@@ -108,12 +103,12 @@ class OnDemandApi(OnDemandAction):
         self.__output_stream = output_stream
 
         packet = ApiRequestPacket()
-        packet.read(self.__input_stream, parse_api_body)
+        packet.read(self.__input_stream, parse_packet_body)
 
         if packet.is_init():
             try:
                 if self.__is_inited:
-                    raise ApiAlreadyInitedException('current api has already been initialized')
+                    raise TriggerActionAlreadyInitedException('current trigger action has already been initialized')
                 self.handle_init(packet)
             except:
                 self.write('error when handling init request')
@@ -126,17 +121,13 @@ class OnDemandApi(OnDemandAction):
                 response = self.handle_data(packet.body())
                 self.write_packet(ApiResponsePacket(1, response))
                 pass
-            except Exception as e:
-                self.write('error when handling data : {}'.format(e))
+            except:
+                self.write('error when handling data')
                 raise
 
         if packet.is_end():
             self.handle_end()
 
 
-class OnDemandApiException(Exception):
-    pass
-
-
-class ApiAlreadyInitedException(OnDemandApiException):
+class TriggerActionAlreadyInitedException(Exception):
     pass

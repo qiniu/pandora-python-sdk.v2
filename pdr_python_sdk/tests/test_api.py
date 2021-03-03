@@ -6,6 +6,7 @@ import io
 from pdr_python_sdk.api import ApiRequestPacket
 from pdr_python_sdk.api.on_demand_api import OnDemandApi
 from pdr_python_sdk.api.response import Response
+from pdr_python_sdk.api.packet import parse_api_body
 from pdr_python_sdk.on_demand_action import run
 from pdr_python_sdk.tools.mock_tools import mock_api_request, gen_api_request_packet
 
@@ -62,7 +63,7 @@ class TestClientMethods(unittest.TestCase):
         body_len = len(body)
         packet = gen_api_request_packet(opcode, body)
         in_stream = io.BytesIO(packet.encode("utf-8"))
-        arp.read(in_stream)
+        arp.read(in_stream, parse_api_body)
         self.assertEqual(arp.allow_stream(), False)
         self.assertEqual(arp.opcode(), opcode)
         self.assertEqual(arp.body_length(), body_len)
