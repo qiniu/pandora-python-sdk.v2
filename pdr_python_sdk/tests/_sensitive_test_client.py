@@ -3,8 +3,7 @@ import time
 import unittest
 import pytest
 import pdr_python_sdk
-from pdr_python_sdk.errors import NotFound
-from pdr_python_sdk.tools import upload
+from pdr_python_sdk.errors import NotFound, IllegalArgument
 
 
 class TestClientMethods(unittest.TestCase):
@@ -286,6 +285,70 @@ class TestClientMethods(unittest.TestCase):
         self.assertEqual(resp.status, 200)
         with pytest.raises(NotFound):
             self.conn.app_enable(app_name)
+
+    def test_export_tasks_api(self):
+        prefix = "integrate_test_"
+        crontab_task = prefix + "crontab"
+        crondate_task = prefix + "crondate"
+        spl = ''' start="-5m" repo="_internal" '''
+
+        # cleanup integrate test
+        ret = self.conn.list_export_tasks(prefix=prefix)
+        if len(ret) > 0 and ret["total"] > 0:
+            # delete tasks
+            for task in ret["tasks"]:
+                self.conn.delete_export_task(task["id"])
+
+        # create export task
+        self.conn.create_export_task(crontab_task, spl, "crontab", crontab="*/5 * * * * ?")
+        self.conn.create_export_task(crondate_task, spl, "cronDate", cronDate={
+            "frequency": "year",
+            "month": "12",
+            "date": "1",
+            "hour": "16",
+            "minute": "0",
+        })
+
+        # get created tasks
+        ret = self.conn.list_export_tasks(prefix=prefix)
+        self.assertEqual(ret["total"], 2)
+        self.assertEqual(len(ret["tasks"]), 2)
+        task_ids = [task["id"] for task in ret["tasks"]]
+
+        # update task name
+        for task in ret["tasks"]:
+            self.conn.update_export_task(task["id"],
+                                         name=task["name"] + "_copy",
+                                         spl=task["spl"],
+                                         interval=task["interval"])
+
+        # disable tasks
+        self.conn.disable_export_task(task_ids)
+        ret = self.conn.list_export_tasks(prefix=prefix)
+        self.assertEqual(ret["tasks"][0]["status"], "stopped")
+
+        # enable tasks
+        self.conn.enable_export_task(task_ids)
+        ret = self.conn.list_export_tasks(prefix=prefix)
+        self.assertEqual(ret["tasks"][0]["status"], "running")
+
+        # get task history
+        task_id = ret["tasks"][0]["id"]
+        self.assertTrue("histories" in self.conn.get_export_task_history(task_id))
+
+        # delete tasks
+        for task in ret["tasks"]:
+            self.conn.delete_export_task(task["id"])
+
+    def test_export_tasks_api_exception(self):
+        with pytest.raises(IllegalArgument):
+            self.conn.create_export_task("name", "spl", "illegal_interval_type")
+        with pytest.raises(IllegalArgument):
+            self.conn.create_export_task("name", "spl", "crontab")
+        with pytest.raises(IllegalArgument):
+            self.conn.update_export_task_status("", [])
+        with pytest.raises(IllegalArgument):
+            self.conn.update_export_task_status("", ["stopped"])
 
 
 if __name__ == "__main__":

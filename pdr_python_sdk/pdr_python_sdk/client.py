@@ -63,6 +63,13 @@ APP_ENABLE = "/apps/{}/enable"
 APP_DISABLE = "/apps/{}/disable"
 APP_CHUNK_SIZE = 5242880
 
+# export task
+EXPORT_TASK = "/export/task"
+EXPORT_TASK_LIST = "/export/task/list"
+EXPORT_SINGLE_TASK = "/export/task/{}"
+EXPORT_TASKS_STATUS = "/export/tasks/status"
+EXPORT_SINGLE_TASK_HISTORY = "/export/task/{}/history"
+
 
 def connect(**kwargs):
     return PandoraConnection(**kwargs)
@@ -503,6 +510,169 @@ class PandoraConnection(object):
                 fields["file"] = (basename, content, 'application/octet-stream')
                 self.request(method="POST", subpath=APP_IMPORT + "?" + urlencode(params), fields=fields)
         return True
+
+    def create_export_task_with_body(self, reqbody):
+        """
+        Create task with full setting
+
+        Example Settings
+        ```
+        {
+            "name": "<Export Task Name>",
+            "spl": "<SPL Content>",
+            "interval": {
+                "type": "cronDate" | "crontab",
+                // not empty if type is cronDate
+                "cronDate": {
+                    "frequency": "day",
+                    "month": "1",
+                    "date": "1",
+                    "hour": "16",
+                    "minute": "0"
+                },
+                // not empty if type is crontab
+                "crontab": ""
+            }
+        }
+        ```
+        """
+        return self.post(EXPORT_TASK, reqbody)
+
+    def create_export_task(self, task_name: str, spl: str, interval_type: str, **kwargs):
+        """
+        Create an export task.
+
+        :param task_name: The name of export task
+        :type task_name: ``str``
+        :param spl: The content of spl
+        :type spl: ``str``
+        :param interval_type: Either `cronDate` or `crontab`
+        :type interval_type: ``str``
+        :param cronDate: valid if interval_type is cronDate
+        :type cronDate: ``map`` with key frequency ("minute" | "hour" | "day" | "weekly" | "month" | "quarter" | "year")
+                        and str fields `month`, `date`, `hour`, `minute`
+        :param crontab: valid if interval_type is crontab
+        :type crontab: ``str`` with crontab expression
+        """
+        reqbody = {
+            "name": task_name,
+            "spl": spl,
+        }
+        # interval_type is cronDate or crontab
+        interval_setting = kwargs.get(interval_type, None)
+        if interval_type not in ("cronDate", "crontab"):
+            raise IllegalArgument(f"Illegal interval type: {interval_type} not supported")
+        if interval_setting is None:
+            raise IllegalArgument(f"Missing value: {interval_type} settings is None")
+        reqbody["interval"] = {
+            "type": interval_type,
+            interval_type: interval_setting,
+        }
+        return self.create_export_task_with_body(reqbody)
+
+    def list_export_tasks(self, **page_params):
+        """
+        Get export task list
+
+        :param sort: The sort column, updateTime by default
+        :type sort: ``str``
+        :param order: The order of data, asc or desc, desc by default
+        :type order: ``str``
+        :param pageNo: The page no, start from 1
+        :type pageNo: ``int``
+        :param pageSize: The size of page, 10 by default
+        :type pageSize: ``int``
+        :param prefix: The search keyword of task name
+        :type prefix: ``str``
+        """
+        return self.get(EXPORT_TASK_LIST, page_params)
+
+    def update_export_task(self, task_id: str, **task_settings):
+        """
+        Update export task with given setting
+
+        Example Settings
+        :param task_id: The task id
+        :type task_id: ``str``
+        ```
+        {
+            "name": "<Export Task Name>",
+            "spl": "<SPL Content>",
+            "interval": {
+                "type": "cronDate" | "crontab",
+                // not empty if type is cronDate
+                "cronDate": {
+                    "frequency": "day",
+                    "month": "1",
+                    "date": "1",
+                    "hour": "16",
+                    "minute": "0"
+                },
+                // not empty if type is crontab
+                "crontab": ""
+            }
+        }
+        ```
+        """
+        return self.put(EXPORT_SINGLE_TASK.format(task_id), task_settings)
+
+    def delete_export_task(self, task_id: str):
+        """
+        Delete export task with given id
+
+        Example Settings
+        :param task_id: The task id
+        :type task_id: ``str``
+        """
+        return self.delete(EXPORT_SINGLE_TASK.format(task_id))
+
+    def update_export_task_status(self, status: str, task_ids: list):
+        """
+        Update export tasks status
+
+        :param task_ids: The task id list
+        :type task_ids: ``list``
+        :param status: The target task status "running" or "stopped"
+        :type status: ``str``
+        """
+        if len(task_ids) <= 0:
+            raise IllegalArgument("Cannot update tasks status: task id list is empty")
+        if status not in ("running", "stopped"):
+            raise IllegalArgument(f"Cannot update tasks status: illegal target status {status}")
+        reqbody = {
+            "tasks": task_ids,
+            "status": status,
+        }
+        return self.put(EXPORT_TASKS_STATUS, reqbody)
+
+    def enable_export_task(self, task_ids: list):
+        """
+        Enable export task running
+        """
+        return self.update_export_task_status("running", task_ids)
+
+    def disable_export_task(self, task_ids: list):
+        """
+        Disable export task running
+        """
+        return self.update_export_task_status("stopped", task_ids)
+
+    def get_export_task_history(self, task_id: str, **page_params):
+        """
+        Get export task Histories
+
+        :param task_id: The id of task
+        :type task_id: ``str``
+        :param sort: The sort column, updateTime by default
+        :type sort: ``str``
+        :param order: The order of data, asc or desc, desc by default
+        :type order: ``str``
+        :param pageNo: The page no, start from 1
+        :type pageNo: ``int``
+        :param pageSize: The size of page, 10 by default
+        :type pageSize: ``int``
+        """
+        return self.get(EXPORT_SINGLE_TASK_HISTORY.format(task_id), **page_params)
 
 
 def encode_json(data):
