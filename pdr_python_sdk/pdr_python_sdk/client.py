@@ -657,7 +657,7 @@ class PandoraConnection(object):
         """
         return self.update_export_task_status("stopped", task_ids)
 
-    def get_export_task_history(self, task_id: str, **page_params):
+    def get_export_task_history(self, task_id: str, page_params):
         """
         Get export task Histories
 
@@ -672,7 +672,7 @@ class PandoraConnection(object):
         :param pageSize: The size of page, 10 by default
         :type pageSize: ``int``
         """
-        return self.get(EXPORT_SINGLE_TASK_HISTORY.format(task_id), **page_params)
+        return self.get(EXPORT_SINGLE_TASK_HISTORY.format(task_id), page_params)
 
 
 def encode_json(data):
