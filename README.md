@@ -97,8 +97,8 @@ class Foobar(SplStreamingBatchCommand):
 
 ## 更多内容
 
-- 产品使用文档和API文档可以参考[使用文档]{https://developer.qiniu.com/express}， [API文档]{https://developer.qiniu.com/express/6468/the-preparatory-work}
-- 关于SDK更多的Demo，可以查看[Demo 链接]{https://github.com/qiniu/pandora-python-sdk.v2/tree/main/pdr_python_sdk/demo}。
+- 产品使用文档和API文档可以参考[使用文档](https://developer.qiniu.com/express)， [API文档](https://developer.qiniu.com/express/6468/the-preparatory-work)
+- 关于SDK更多的Demo，可以查看[Demo 链接](https://github.com/qiniu/pandora-python-sdk.v2/tree/main/pdr_python_sdk/demo)。
 - 如果发现了bug， 欢迎提交 [issue](https://github.com/qiniu/python-sdk/issues)
 - 如果有功能需求，欢迎提交 [issue](https://github.com/qiniu/python-sdk/issues)
 - 如果要提交代码，欢迎提交 pull request
