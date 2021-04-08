@@ -657,7 +657,7 @@ class PandoraConnection(object):
         """
         return self.update_export_task_status("stopped", task_ids)
 
-    def get_export_task_history(self, task_id: str, page_params):
+    def get_export_task_history(self, task_id: str, **page_params):
         """
         Get export task Histories
 
