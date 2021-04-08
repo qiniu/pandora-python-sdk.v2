@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pdr-python-sdk",
-    version="1.0.15",
+    version="1.0.16",
     keywords=["qiniu", "pandora", "sdk"],
     description="pandora python sdk, simple to integrate with pandora",
     license="Apache-2.0",
