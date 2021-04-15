@@ -14,7 +14,7 @@ def gen_api_request_packet(opcode, body=""):
     return "{}\n{}\n{}".format(opcode, len(bytearray(body, "utf-8")), body)
 
 
-def mock_trigger_param(custom_trigger_cls, events=[]):
+def mock_trigger_param(custom_trigger_cls, events=[], metadata=None):
     if events is None or len(events) == 0:
         return {}
 
@@ -22,7 +22,11 @@ def mock_trigger_param(custom_trigger_cls, events=[]):
              ApiRequestPacket.OPCODE_REQUEST_DATA | \
              ApiRequestPacket.OPCODE_REQUEST_END
 
-    body = json.dumps(events)
+    packet = {
+        "metadata": metadata,
+        "triggerActionParams": events
+    }
+    body = json.dumps(packet)
     request_packet = gen_api_request_packet(opcode, body)
 
     in_stream = io.BytesIO(request_packet.encode("utf-8"))

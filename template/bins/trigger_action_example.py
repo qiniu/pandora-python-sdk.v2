@@ -12,6 +12,15 @@ sys.path.insert(0, os.path.sep.join([os.path.dirname(os.path.abspath(__file__)),
 
 class TriggerActionExample(OnDemandTriggerAction):
 
+    def do_handle_init(self, packet):
+        """
+        :param packet:
+        :return:
+        """
+        if packet.body().contains_metadata():
+            metadata = packet.body().metadata()
+            logging.info("metadata = %s", metadata)
+
     def do_handle_events(self, events):
         length = len(events)
         event_name = ""

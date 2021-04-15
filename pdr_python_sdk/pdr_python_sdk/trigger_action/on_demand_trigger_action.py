@@ -54,7 +54,7 @@ class OnDemandTriggerAction(OnDemandAction):
         @rtype: str
         @return: response as a string
         """
-        return self.do_handle_events(data)
+        return self.do_handle_events(data.events())
 
     def do_handle_events(self, events):
         """

@@ -14,11 +14,33 @@ limitations under the License.
 import json
 
 
+class TriggerPacketBody(object):
+    def __init__(self, metadata=None, triggerActionParams=None):
+        self.__metadata = metadata
+        self.__events = []
+        if triggerActionParams is not None:
+            for event in triggerActionParams:
+                self.__events.append(TriggerActionParam(**event))
+
+    def metadata(self):
+        return self.__metadata
+
+    def events(self):
+        return self.__events
+
+    def contains_metadata(self):
+        return self.__metadata is not None
+
+    def contains_events(self):
+        return self.__events is not None and len(self.__events) > 0
+
+
 class TriggerActionParam(object):
-    def __init__(self, eventDisplayId, eventId, eventName, eventDescription, eventStatus,
-                 eventSubject, alertLevel, eventTime, eventConditionRecord, alertSourceType,
-                 alertName, alertDescription, alertDataSource, alertTimeRange, alertInterval,
-                 alertExecuteCount, phoenixHost, userName, realUserName, params, additionContents):
+    def __init__(self, eventDisplayId=None, eventId=None, eventName=None, eventDescription=None, eventStatus=None,
+                 eventSubject=None, alertLevel=None, eventTime=None, eventConditionRecord=None, alertSourceType=None,
+                 alertName=None, alertDescription=None, alertDataSource=None, alertTimeRange=None, alertInterval=None,
+                 alertExecuteCount=None, phoenixHost=None, userName=None, realUserName=None, params=None,
+                 additionContents=None):
         self.eventDisplayId = eventDisplayId
         self.eventId = eventId
         self.eventName = eventName
@@ -56,7 +78,4 @@ class AdditionContent(object):
 
 
 def parse_packet_body(body):
-    trigger_action_params = []
-    for param in json.loads(body):
-        trigger_action_params.append(TriggerActionParam(**param))
-    return trigger_action_params
+    return TriggerPacketBody(**json.loads(body))
