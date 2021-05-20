@@ -676,7 +676,7 @@ class PandoraConnection(object):
 
 
 def encode_json(data):
-    return json.dumps(data).encode(DEFAULT_ENCODING)
+    return json.dumps(data, ensure_ascii=False).encode(DEFAULT_ENCODING)
 
 
 def decode_json(data_bytes):

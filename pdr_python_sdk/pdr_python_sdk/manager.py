@@ -122,7 +122,7 @@ class DataManager(object):
         time_field = kwargs.get("time_field", None)
         data = []
         for r in records:
-            d = {"raw": json.dumps(r)}
+            d = {"raw": json.dumps(r, ensure_ascii=False)}
             if time_field and (time_field in r):
                 t = r[time_field]
                 if is_legal_timestamp(t):
