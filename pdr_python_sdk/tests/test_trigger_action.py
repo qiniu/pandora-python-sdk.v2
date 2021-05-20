@@ -6,6 +6,7 @@ from pdr_python_sdk.tools.mock_tools import mock_trigger_param
 from pdr_python_sdk.on_demand_action import run
 from pdr_python_sdk.trigger_action.on_demand_trigger_action import OnDemandTriggerAction
 
+
 class TriggerActionExample(OnDemandTriggerAction):
 
     def do_handle_events(self, events):
