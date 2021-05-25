@@ -49,6 +49,41 @@ def mock_trigger_param(custom_trigger_cls, events=[], metadata=None):
     out_stream.close()
     return body
 
+def mock_sched_task_param(sched_task_cls, params=None, metadata=None):
+    if params is None:
+        return {}
+
+    opcode = ApiRequestPacket.OPCODE_REQUEST_INIT | \
+             ApiRequestPacket.OPCODE_REQUEST_DATA | \
+             ApiRequestPacket.OPCODE_REQUEST_END
+
+    packet = {
+        "metadata": metadata,
+        "params": params
+    }
+    body = json.dumps(packet)
+    request_packet = gen_api_request_packet(opcode, body)
+
+    in_stream = io.BytesIO(request_packet.encode("utf-8"))
+    in_stream.seek(0)
+
+    out_stream = io.BytesIO()
+    run(sched_task_cls, sys.argv, in_stream, out_stream)
+    out_stream.seek(0)
+
+    # opcode
+    int(out_stream.readline().decode("utf-8").strip())
+    # body_length
+    len_str = out_stream.readline().decode("utf-8")
+    body_length = int(len_str)
+    # response
+    response_str = out_stream.read(body_length).decode("utf-8")
+    body = json.loads(response_str)
+
+    in_stream.close()
+    out_stream.close()
+    return body
+
 
 def mock_api_request(custom_api_cls,
                      method="GET", header={}, param={}, body="", uuid="", path="", metadata=None):
