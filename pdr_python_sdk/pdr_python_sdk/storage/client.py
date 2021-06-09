@@ -1,234 +1,190 @@
 import json
-from ..storage.base import (Base, UrlEncoded)
+from urllib.parse import urlencode
+from pdr_python_sdk.client import PandoraConnection
+
+
+BASE_V2_PATH = "/storage/v2/collections/{}"
+BASE_V1_PATH = "/storage/collections/{}"
+
 
 __all__ = [
     "connect",
     "Service"
 ]
 
-def _path(base, name):
-    if not base.endswith('/'): base = base + '/'
-    return base + name
-
-# kwargs: scheme, host, port, app
+"""
+:param host: Host name. type ``string``
+:param port: Port number. type ``integer``
+:param scheme: Scheme for accessing the service. type "http" or "https"
+:param token: Access token. type ``string``
+:return: A :class:`Service` instance.
+"""
 def connect(**kwargs):
-    s = Service(**kwargs)
-    return s
+    return Service(**kwargs)
 
-class Service(Base):
-    """
-    :param host: Host name. type ``string``
-    :param port: Port number. type ``integer``
-    :param scheme: Scheme for accessing the service. type "http" or "https"
-    :return: A :class:`Service` instance.
-    """
+class Service(PandoraConnection):
+
     def __init__(self, **kwargs):
         super(Service, self).__init__(**kwargs)
         self._ml_version = None
 
-    def storage(self, app):
+    def storage(self, app, **kwargs):
         """
         :param app: App name. type ``string``
-        Return KV Store table.
+        :param version: Sdk version. type ``string``
         :return: A :class:`StorageTable`.
         """
-        return StorageTable(self, app)
-
-
-class Endpoint(object):
-    """
-    An ``Endpoint`` represents a URI.
-    This class provides :class:`Entity` (HTTP GET and POST methods).
-    """
-    def __init__(self, service, path):
+        return StorageTable(self, app, **kwargs)
+    
+class StorageTable(object):
+    def __init__(self, service, app, **kwargs):
         self.service = service
-        self.path = path if path.endswith('/') else path + '/'
-
-    def get(self, path_segment="", **kwargs):
-        """
-        A GET operation on the path segment.
-        """
-        if path_segment.startswith('/'):
-            path = path_segment
-        else:
-            path = self.service._abspath(self.path + path_segment)
-        return self.service.get(path, **kwargs)
-
-    def post(self, path_segment="", body=None):
-        """
-        A POST operation on the path segment.
-        """
-        if path_segment == "":
-            path = self.path
-        elif path_segment.startswith('/'):
-            path = path_segment
-        else:
-            path = self.service._abspath(self.path + path_segment)
-        return self.service.post(path, None, body=body)
-    
-    def put(self, path_segment="", body=None):
-        """
-        A PUT operation on the path segment.
-        """
-        if path_segment == "":
-            path = self.path
-        elif path_segment.startswith('/'):
-            path = path_segment
-        else:
-            path = self.service._abspath(self.path + path_segment)
-        return self.service.put(path, None, body=body)    
-    
-    def delete(self, path_segment="", **kwargs):
-        """
-        A Delete operation on the path segment.
-        """
-        if path_segment == "":
-            path = self.path
-        elif path_segment.startswith('/'):
-            path = path_segment
-        else:
-            path = self.service._abspath(self.path + path_segment)
-        return self.service.delete(path, **kwargs)    
-    
-class StorageTable(Endpoint):
-    def __init__(self, service, app):
-        Endpoint.__init__(self, service, '/api/v1/storage/collections/' + UrlEncoded(app))
         self.app = app
+        version = kwargs.get("version", "")
+        if version == 'v2':
+            self.path = BASE_V2_PATH.format(app)
+        else:
+            self.path = BASE_V1_PATH.format(app)
+        
         
     def data(self, name):
         """
-        Return data object for this Collection. rtype: :class:`KVStoreCollectionData`
+        :param name: Table name. type ``string``
+        :return: A :class:`KVStoreCollectionData`.
         """
-        return StorageTableData(self, self.app, name)
+        return StorageTableData(self.service, self.path, name)
 
     def create(self, data):
         """
         Create a KV Store table.
-
-        :param app: App name. type ``string``
-        :param name: Table name. type ``string``
-        :param schema: Table schema. type ``dict``
-
+        :param data: Table schema. type ``dict`` or ``string``. map with key tableName, fields, indices. The req_body is like:
+        >>>{
+        >>>    "tableName": "test",
+        >>>    "fields": [{"name":"title", "type":"varchar", "length": 128}],
+        >>>    "indices": [["title"]]
+        >>>}
+        :type tableName: ``string``. Table name.
+        :type fields: ``list``.  Fields schema. map with key name, type, length.
+        :type name: ``string``. Field name.
+        :type type: ``string``. Field type, support varchar, int, bigint, timestamp, float, double, text, mediumtext, longtext.
+        :type length: ``integer``. Field length, only valid when type is varchar.
+        :type indices: ``list``. Table indices.
         :return: Result of POST request
         """
-        return self.post("config", body=data)
+        return self.service.post(self.path + "/config", body=get_object(data))
+
+    def update(self, data):
+        """
+        Update a KV Store table. Add or delete a field, modify the type or length on a field.
+        :param data: Table alter schema. type ``dict`` or ``string``. map with key tableName, field, operation.
+        :type tableName: ``string``. Table name.
+        :type field: ``dict``. Field Schema, map with key name, type, length, same as create table.
+        :type operation: ``string``. Operation type, support add, delete, modify.
+        :return: Result of PUT request
+        """
+        return self.service.put(self.path + "/config", body=get_object(data))
     
     def get_tables(self):
         """
-        Get a KV Store table.
-
-        :param name: Table name. type ``string``
-
-        :return: Result of POST request
+        Get KV Store tables.
+        :return: Tables belong to app and all global tables.
         """
-        return json.loads(self.get("config").body)
+        return self.service.get(self.path + "/config")
     
     def delete_table(self, name):
         """
-        Get a KV Store table.
-
-        :param name: Table name. type ``string``
-
-        :return: Result of POST request
+        Delete a KV Store table.
+        :param name: Table name. type ``string``.
+        :return: Result of DELETE request
         """
-        return json.loads(self.delete(name).body)     
+        return self.service.delete(self.path + '/{}'.format(name))
 
 class StorageTableData(object):
     """
     Represent the data endpoint for a StorageTable. Using :meth:`StorageTable.data`
     """
-    def __init__(self, service, app, name):
+    def __init__(self, service, basepath, name):
         self.service = service
-        self.path = '/api/v1/storage/collections/' + app +  "/data/" +  name
-
-    def _get(self, url, **kwargs):
-        return self.service.get(self.path + url, **kwargs)
-
-    def _post(self, url, body):
-        return self.service.post(self.path + url, body=body)
-    
-    def _put(self, url, body):
-        return self.service.put(self.path + url, body=body)    
-
-    def _delete(self, url, **kwargs):
-        return self.service.delete(self.path + url, **kwargs)
+        self.path = basepath + '/data/{}'.format(name)
 
     def query(self, **kwargs):
         """
         Get the results of query.
-
-        :param kwargs: Parameters (Optional). Such as sort, limit, skip, and fields. type ``dict``
-        :return: Array of documents. rtype: ``array``
+        :param query: Query string. type ``string``. Will not use other params if query is not empty.
+        :param sort: The sort column. type ``string``
+        :param order: The order of data, asc or desc, desc by default. type ``string``
+        :param pageNo: The page no, start from 1. type ``integer``
+        :param pageSize: The size of page, 10 by default. type ``integer``
+        :return: Result of documents. rtype: ``dict``
         """
-        return json.loads(self._get('', **kwargs).body)
+        return self.service.get(self.path, fields=kwargs)
 
     def query_by_id(self, id):
         """
         Return object with id.
-
         :param id: Value for ID.
         :return: Document with id. rtype: ``dict``
         """
-        return json.loads(self._get("/" + str(id)).body)
+        return self.service.get(self.path + '/{}'.format(id))
 
-    def insert(self, record):
+    def insert(self, data):
         """
-        Insert item into this table. An id field will be generated in the data.
-
-        :param data: Document to insert. type ``string``
-        :return: id of inserted object. rtype: ``dict``
+        Insert record into this table. An id field will be auto generated in the data.
+        :param data: Document to insert. type ``dict``. key must in field list. The req_body is like:
+        >>>{
+        >>>    "title": "test"
+        >>>}
+        :return: Result of POST request
         """
-        data = json.dumps(record)
-        return json.loads(self._post('', data).body)
+        return self.service.post(self.path, body=get_object(data))
     
     def delete(self, **kwargs):
         """
-        Delete.
-
-        :param kwargs: Parameters (Optional). Such as sort, limit, skip, and fields. type ``dict``
+        Delete dicuments by query.
+        :param query: Query string. type ``string``. will delete all records if query is empty.
         :return: Result of DELETE request
         """
-        return json.loads(self._delete('', **kwargs).body)    
+        return self.service.delete(self.path, fields=kwargs)
 
     def delete_by_id(self, id):
         """
-        Delete by id.
-
+        Delete dicument by id.
         :param id: id record to delete. type ``string``
         :return: Result of DELETE request
         """
-        return json.loads(self._delete("/" + str(id)).body)
+        return self.service.delete(self.path + '/{}'.format(id))
 
     def update(self, id, data):
         """
         Replace record with id and data.
-
         :param id: Id of record to update. type ``string``
-        :param data: The new record to insert. type ``string``
-        :return: id of replaced record`
+        :param data: The keys to update with new value. type ``dict`` or ``string``
+        :return: Result of PUT request
         """
-        return json.loads(self._put("/" + str(id), body=data).body)
+        return self.service.put(self.path + '/{}'.format(id), body=get_object(data))
     
-    def updateByQuery(self, data):
+    def updateByQuery(self, data, **kwargs):
         """
-        Replace record with id and data.
-
+        Replace records with id and data.
         :param id: Id of record to update. type ``string``
-        :param data: The new record to insert. type ``string``
-        :return: id of replaced record`
+        :param data: The keys to update with new value. type ``dict`` or ``string``
+        :return: Result of PUT request
         """
-        return json.loads(self._put("", body=data).body)    
+        return self.service.put(self.path, body=get_object(data), fields=kwargs)
 
-    def batch_save(self, records):
+    def batch_save(self, datas):
         """
-        Insert records in records.
-
-        :param records: Array of records to save as dictionaries. type ``array`` of ``dict``
-        :return: Results of insert Request.
+        Insert records to table.
+        :param datas: Array of records to save as dictionaries. type ``array``
+        :return: Result of POST request
         """
-        if len(records) < 1:
+        if len(datas) < 1:
             raise Exception('Must have at least one record.')
 
-        data = json.dumps(records)
-        return json.loads(self._post('/batch_save', body=data).body)
+        return self.service.post(self.path + '/batch_save', body=get_object(datas))
 
+def get_object(element):
+    if isinstance(element, str):
+        return json.loads(element)
+    else:
+        return element
