@@ -22,6 +22,8 @@ from pdr_python_sdk.entity import RepoConfigBuilder
 
 # If you change these, update the docstring
 # on _uri as well.
+from pdr_python_sdk.schedue.job import Job
+
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = "8000"
 DEFAULT_SCHEME = "http"
@@ -69,6 +71,12 @@ EXPORT_TASK_LIST = "/export/task/list"
 EXPORT_SINGLE_TASK = "/export/task/{}"
 EXPORT_TASKS_STATUS = "/export/tasks/status"
 EXPORT_SINGLE_TASK_HISTORY = "/export/task/{}/history"
+
+# Job Register
+JOB_REGISTER = "/xihe/job"
+JOB_UPDATE = "/xihe/job"
+JOB_QUERY = "/xihe/job/{}"
+JOB_DELETE = "/xihe/job/{}"
 
 
 def connect(**kwargs):
@@ -673,6 +681,44 @@ class PandoraConnection(object):
         :type pageSize: ``int``
         """
         return self.get(EXPORT_SINGLE_TASK_HISTORY.format(task_id), page_params)
+
+    def get_job_v2(self, job_id):
+        """
+        Get job with job id
+
+        :param job_id: The id of job
+        :return: Job
+        ```
+        """
+        return self.get(JOB_QUERY.format(job_id))
+
+    def create_job_v2(self, job: Job):
+        """
+        Create job
+
+        :param: job Job
+        :return: jobId
+        """
+
+        return self.post(JOB_REGISTER, job.job2dict())
+
+    def update_job_v2(self, job: Job):
+        """
+        Update Job with some fields
+
+        :param: job Job
+        :return: {}
+        """
+        return self.put(JOB_UPDATE, job.job2dict())
+
+    def delete_job_v2(self, job_id):
+        """
+        Delete job with job id
+
+        :param job_id: JobId
+        :return: {}
+        """
+        return self.delete(JOB_DELETE.format(job_id))
 
 
 def encode_json(data):

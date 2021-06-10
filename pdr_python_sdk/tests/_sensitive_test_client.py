@@ -1,9 +1,13 @@
 import os
 import time
 import unittest
+import uuid
+
 import pytest
 import pdr_python_sdk
 from pdr_python_sdk.errors import NotFound, IllegalArgument
+from pdr_python_sdk.schedue.job import Job
+from pdr_python_sdk.schedue.task import Task
 
 
 class TestClientMethods(unittest.TestCase):
@@ -349,6 +353,69 @@ class TestClientMethods(unittest.TestCase):
             self.conn.update_export_task_status("", [])
         with pytest.raises(IllegalArgument):
             self.conn.update_export_task_status("", ["stopped"])
+
+    def get_create_job_v2_body(self) -> Job:
+        job = Job('testJobName')
+        job.set_app_name('testAppName')
+        job.set_parameter('action', 'testRun')
+        job.set_crontab('0 0/3 * * * ?')
+        job.set_status(False)
+        job.set_execute_batch(3)
+
+        task_1a = Task('customHandler')
+        task_1a.set_parameter('file', 'send_msg.py')
+        task_1a.set_parameter('env', 'user=jack')
+        task_1a.set_parameter('params', {'money': 100, 'type': 'RMB'})
+
+        task_2a = Task('customHandler')
+        task_2a.set_parameter('file', 'putin_agree.py')
+        task_2a.set_parameter('env', 'user=Putin')
+        task_2a.set_parameter('params', {'action': 'agree'})
+        task_2a.add_task(task_1a)
+
+        task_3a = Task('customHandler')
+        task_3a.set_parameter('file', 'trump_agree.py')
+        task_3a.set_parameter('env', 'user=Trump')
+        task_3a.set_parameter('params', {'action': 'agree'})
+        task_3a.add_task(task_1a)
+
+        job.add_task(task_2a)
+        job.add_task(task_3a)
+
+        return job
+
+    def test_create_job_v2(self):
+        body = self.get_create_job_v2_body()
+        try:
+            res = self.conn.create_job_v2(body)
+            self.assertTrue(body.get_job_id() == res['jobId'])
+        finally:
+            self.conn.delete_job_v2(body.get_job_id())
+
+    def test_update_job_v2(self):
+        body = self.get_create_job_v2_body()
+        try:
+            self.conn.create_job_v2(body)
+            body.set_status(True)
+            res = self.conn.update_job_v2(body)
+            self.assertEqual(len(res), 0)
+        finally:
+            self.conn.delete_job_v2(body.get_job_id())
+
+    def test_get_job_v2(self):
+        body = self.get_create_job_v2_body()
+        try:
+            self.conn.create_job_v2(body)
+            res = self.conn.get_job_v2(body.get_job_id())
+            self.assertEqual(body.get_job_id(), res["jobId"])
+        finally:
+            self.conn.delete_job_v2(body.get_job_id())
+
+    def test_delete_job_v2(self):
+        body = self.get_create_job_v2_body()
+        self.conn.create_job_v2(body)
+        res = self.conn.delete_job_v2(body.get_job_id())
+        self.assertEqual(len(res), 0)
 
 
 if __name__ == "__main__":
