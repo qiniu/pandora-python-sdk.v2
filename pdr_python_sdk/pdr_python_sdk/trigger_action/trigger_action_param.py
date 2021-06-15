@@ -40,7 +40,7 @@ class TriggerActionParam(object):
                  eventSubject=None, alertLevel=None, eventTime=None, eventConditionRecord=None, alertSourceType=None,
                  alertName=None, alertDescription=None, alertDataSource=None, alertTimeRange=None, alertInterval=None,
                  alertExecuteCount=None, phoenixHost=None, userName=None, realUserName=None, params=None,
-                 additionContents=None):
+                 additionContents=None, **kwargs):
         self.eventDisplayId = eventDisplayId
         self.eventId = eventId
         self.eventName = eventName
