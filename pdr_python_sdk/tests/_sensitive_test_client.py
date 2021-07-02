@@ -272,7 +272,7 @@ class TestClientMethods(unittest.TestCase):
         assert not self.conn.is_exist_sourcetype("test_st")
 
     def test_app_install(self):
-        app_name = "test-pure-app"
+        app_name = "test_pure_app"
         parentdir = os.path.dirname(os.path.abspath(__file__))
         app_path = os.sep.join([parentdir, "data", "pure-app.tar.gz"])
         ret = self.conn.app_install(app_path, overwrite=True)
