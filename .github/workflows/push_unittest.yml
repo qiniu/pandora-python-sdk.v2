@@ -28,6 +28,10 @@ jobs:
         python -m pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with pytest
+      env:
+        PANDORA_HOST: ${{ secrets.PANDORA_HOST }}
+        PANDORA_SCHEME: ${{ secrets.PANDORA_SCHEME }}
+        PANDORA_TOKEN: ${{ secrets.PANDORA_TOKEN }}
       run: |
         bash ./pdr_python_sdk/travis/run_on_non_pull_requests.sh;
         codecov
