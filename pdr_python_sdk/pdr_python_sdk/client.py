@@ -682,7 +682,7 @@ class PandoraConnection(object):
         """
         return self.get(EXPORT_SINGLE_TASK_HISTORY.format(task_id), page_params)
 
-    def get_schedule(self, job_id):
+    def get_schedule(self, job_id) -> Job:
         """
         Get job with job id
 
@@ -690,7 +690,7 @@ class PandoraConnection(object):
         :return: Job
         ```
         """
-        return self.get(JOB_QUERY.format(job_id))
+        return Job(None).json2job(self.get(JOB_QUERY.format(job_id)))
 
     def create_schedule(self, job: Job):
         """

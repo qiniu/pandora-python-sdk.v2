@@ -406,7 +406,7 @@ class TestClientMethods(unittest.TestCase):
         try:
             self.conn.create_schedule(body)
             res = self.conn.get_schedule(body.get_job_id())
-            self.assertEqual(body.get_job_id(), res["jobId"])
+            self.assertEqual(body.get_job_id(), res.get_job_id())
         finally:
             self.conn.delete_schedule(body.get_job_id())
 
