@@ -170,6 +170,8 @@ class StorageTableData(object):
         :param data: The keys to update with new value. type ``dict`` or ``string``
         :return: Result of PUT request
         """
+        if kwargs['insert']:
+            kwargs['insert'] = 'true'
         return self.service.put(self.path, body=get_object(data), fields=kwargs)
 
     def batch_save(self, datas):
