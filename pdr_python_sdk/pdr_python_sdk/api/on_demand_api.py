@@ -17,8 +17,11 @@ from .packet import ApiPacketBody
 from .packet import ApiRequestPacket
 from .packet import ApiResponsePacket
 from .packet import parse_api_body
+from .response import Response
 from ..on_demand_action import OnDemandAction
 
+
+API_MAX_RESPONSE_SIZE = 512 * 1024 * 1024
 
 class OnDemandApi(OnDemandAction):
     """
@@ -29,6 +32,7 @@ class OnDemandApi(OnDemandAction):
         self.__is_inited = False
         self.__input_stream = sys.stdin.buffer
         self.__output_stream = sys.__stdout__.buffer
+        self.__response_size = API_MAX_RESPONSE_SIZE
 
     def do_handle_init(self, packet):
         """
@@ -59,6 +63,8 @@ class OnDemandApi(OnDemandAction):
         @param ApiRequestPacket packet: packet received from the request
         """
         self.do_handle_init(packet)
+        if packet.body() is not None and packet.body().metadata() is not None:
+            self.__response_size = packet.body().metadata().get('api_response_size', API_MAX_RESPONSE_SIZE)
         self.__is_inited = True
 
     def handle_data(self, data):
@@ -124,6 +130,11 @@ class OnDemandApi(OnDemandAction):
         if packet.contains_data():
             try:
                 response = self.handle_data(packet.body())
+                errResponse = ApiResponsePacket(1, response)
+                if errResponse.body_length() > self.__response_size:
+                    response_info = "api response size is {}, larger than max size {}".format(errResponse.body_length(), self.__response_size)
+                    self.write_packet(ApiResponsePacket(1, Response(400, response_info).to_string()))
+                    return
                 self.write_packet(ApiResponsePacket(1, response))
                 pass
             except Exception as e:
