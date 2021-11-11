@@ -43,10 +43,20 @@ class Task:
             'successors': None
         }
 
-        if len(self.successors) > 0:
+        if self.successors:
             tasks = []
             for task in self.successors:
                 tasks.append(task.task2dict())
             task_dict['successors'] = tasks
 
         return task_dict
+
+    def json2task(self, json_data):
+        self.id = json_data['id']
+
+        self.handler = json_data['handler']
+        self.task_parameters = json_data['taskParameters']
+        if json_data['successors']:
+            for task_json_data in json_data['successors']:
+                self.successors.append(Task(None).json2task(task_json_data))
+        return self

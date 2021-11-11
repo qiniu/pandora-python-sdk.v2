@@ -1,5 +1,6 @@
 import uuid
 
+from pdr_python_sdk.schedule.task import Task
 
 class Job:
     def __init__(self, name):
@@ -66,10 +67,23 @@ class Job:
             'tasks': None
         }
 
-        if len(self.tasks) > 0:
+        if self.tasks:
             tasks = []
             for task in self.tasks:
                 tasks.append(task.task2dict())
             job_dict['tasks'] = tasks
 
         return job_dict
+
+    def json2job(self, json_data):
+        self.job_id = json_data['jobId']
+        self.job_name = json_data['jobName']
+        self.app_name = json_data['appName']
+        self.global_parameters = json_data['globalParameters']
+        self.enabled = json_data['enabled']
+        self.execute_batch = json_data['executeBatch']
+        self.crontab = json_data['crontab']
+        if json_data['tasks']:
+            for task_json_data in json_data['tasks']:
+                self.tasks.append(Task(None).json2task(task_json_data))
+        return self

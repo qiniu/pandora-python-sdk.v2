@@ -50,6 +50,6 @@ print('create job, return : ' + str(conn.create_schedule(job)))
 job.set_parameter('action', 'stop')
 print('update job, return : ' + str(conn.update_schedule(job)))
 
-print('get job: return : ' + str(conn.get_schedule(job.get_job_id())))
+print('get job: return : ' + str(conn.get_schedule(job.get_job_id()).job2dict()))
 
 print('delete job: return : ' + str(conn.delete_schedule(job.get_job_id())))
