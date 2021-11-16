@@ -2,7 +2,7 @@ import io
 import json
 import sys
 
-from pdr_python_sdk.api import ApiRequestPacket, HTTP_CODE_KEY, ACTUAL_RESPONSE_KEY
+from pdr_python_sdk.api import ApiRequestPacket, HTTP_CODE_KEY, ACTUAL_RESPONSE_KEY, HEADER_KEY
 from pdr_python_sdk.on_demand_action import run
 from pdr_python_sdk.trigger_action.trigger_action_param import TriggerActionParam
 
@@ -133,4 +133,4 @@ def mock_api_request(custom_api_cls,
 
     in_stream.close()
     out_stream.close()
-    return body[HTTP_CODE_KEY], body[ACTUAL_RESPONSE_KEY]
+    return body[HTTP_CODE_KEY], body[ACTUAL_RESPONSE_KEY], body[HEADER_KEY]
