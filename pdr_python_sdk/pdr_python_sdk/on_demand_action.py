@@ -33,7 +33,10 @@ class OnDemandAction(object):
 def run(clz, argv=None, input_stream=sys.stdin.buffer, output_stream=sys.__stdout__.buffer):
 
     # config logging
-    config_logging()
+    if len(argv) > 2:
+        config_logging(filename=argv[2])
+    else:
+        config_logging()
 
     if argv is None:
         argv = sys.argv

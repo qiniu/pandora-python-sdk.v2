@@ -16,8 +16,12 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 
-def config_logging(level=None, filename=None, max_bytes=1024*1024*20, backup_count=5):
-    if filename is None:
+def config_logging(level=None, filename=None, max_bytes=1024 * 1024 * 20, backup_count=5):
+    if filename and os.path.isdir(filename):
+        filename = filename + '/phoenix_app.log'
+        if not os.path.exists(filename):
+            open(filename, 'w').close()
+    else:
         log_dir = '../log'
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
