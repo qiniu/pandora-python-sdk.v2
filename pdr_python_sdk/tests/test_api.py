@@ -21,8 +21,8 @@ class HelloWorldApi(OnDemandApi):
         if data.contains_metadata():
             metadata = data.metadata()
         if 'GET' != str.upper(request.method()):
-            return Response(405, 'unsupported method [{}]'.format(str.upper(request.method()))).to_string()
-        return Response(204, [{"hello": "world"}]).to_string()
+            return Response(405, 'unsupported method [{}]'.format(str.upper(request.method())), {"contentType": "application/json; charset=UTF-8"}).to_string()
+        return Response(204, [{"hello": "world"}], {"contentType": "application/pdf"}).to_string()
 
 
 class TestClientMethods(unittest.TestCase):
@@ -35,12 +35,13 @@ class TestClientMethods(unittest.TestCase):
             sys.__stdout__.buffer)
 
     def test_mock_api(self):
-        http_code, response_body = mock_api_request(HelloWorldApi, method="GET")
+        http_code, response_body, header = mock_api_request(HelloWorldApi, method="GET")
         self.assertEqual(http_code, 204)
         self.assertEqual(response_body[0]['hello'], "world")
+        self.assertEqual(header['contentType'], "application/pdf")
 
     def test_mock_api_post(self):
-        http_code, response_body = mock_api_request(HelloWorldApi, method="POST")
+        http_code, response_body, header = mock_api_request(HelloWorldApi, method="POST")
         self.assertEqual(http_code, 405)
 
     def test_api_request_packet(self):
